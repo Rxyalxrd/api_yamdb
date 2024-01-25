@@ -105,10 +105,3 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = 'reviews.User'
-
-DJOSER = {
-    'USER_ID_FIELD': 'username',
-    'SERIALIZERS': {
-        'user': 'api.serializers.UserSerializer',
-    },
-}
