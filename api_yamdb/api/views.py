@@ -19,18 +19,16 @@ class UserViewSet(viewsets.ModelViewSet):
     def self_information(self, request, pk=None):
         """
         Возвращает данные о пользователе сделавшего GET-запрос.
-        Вносит изменения в данные учетной записи пользователя 
+        Вносит изменения в данные учетной записи пользователя
         сделавшего PATCH-запрос.
         """
         serializer = self.get_serializer(request.user)
-        if self.request.method == 'PATCH':
-            serializer = self.get_serializer(data=request.data)
+        if request.method == 'PATCH':
+            serializer = self.get_serializer(
+                request.user, data=request.data, partial=True
+            )
             if serializer.is_valid():
                 serializer.save()
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED
-                )
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data)
