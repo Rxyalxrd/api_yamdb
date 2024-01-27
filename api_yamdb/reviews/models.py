@@ -7,17 +7,41 @@ from django.contrib.auth.models import AbstractUser
 from .validators import validate_year
 
 
-ROLE = (
-    ('admin', 'администратор'),
-    ('moderator', 'модератор'),
-    ('user', 'пользователь'),
-)
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+
+ROLE = [
+    (USER, USER),
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+]
 
 
 class User(AbstractUser):
     bio = models.TextField(blank=True)
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=15, choices=ROLE, default='user')
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -140,6 +164,7 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации.',
+        db_index=True
     )
 
     class Meta:
@@ -151,6 +176,7 @@ class Review(models.Model):
                 name='unique_title_author'
             )
         ]
+        ordering = ('pub_date',)
 
     def __str__(self):
         return self.text
@@ -178,6 +204,7 @@ class Comment(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации.',
+        db_index=True
     )
 
     class Meta:
