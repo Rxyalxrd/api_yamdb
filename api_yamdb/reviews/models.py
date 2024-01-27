@@ -133,7 +133,7 @@ class Review(models.Model):
         return self.text
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     """Модель комментариев."""
     review = models.ForeignKey(
         Review,
