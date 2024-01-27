@@ -1,10 +1,23 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth import get_user_model
+from django.core.validators import (MaxValueValidator,
+                                    MinValueValidator,
+                                    RegexValidator)
+from django.contrib.auth.models import AbstractUser
 
 from .validators import validate_year
 
-User = get_user_model()
+
+ROLE = (
+    ('admin', 'администратор'),
+    ('moderator', 'модератор'),
+    ('user', 'пользователь'),
+)
+
+
+class User(AbstractUser):
+    bio = models.TextField(blank=True)
+    email = models.EmailField(unique=True)
+    role = models.CharField(max_length=15, choices=ROLE, default='user')
 
 
 class Category(models.Model):
@@ -12,12 +25,17 @@ class Category(models.Model):
 
     name = models.CharField(
         verbose_name='Название категории',
-        max_length=200
+        max_length=256
     )
     slug = models.SlugField(
         verbose_name='Слаг категории',
         unique=True,
-        db_index=True
+        db_index=True,
+        max_length=50,
+        validators=[RegexValidator(
+            regex=r'^[-a-zA-Z0-9_]+$',
+            message='Слаг категории содержит недопустимый символ'
+        )]
     )
 
     class Meta:
@@ -33,12 +51,17 @@ class Genre(models.Model):
 
     name = models.CharField(
         verbose_name='Название жанра',
-        max_length=200
+        max_length=256
     )
     slug = models.SlugField(
         verbose_name='Слаг жанра',
         unique=True,
-        db_index=True
+        db_index=True,
+        max_length=50,
+        validators=[RegexValidator(
+            regex=r'^[-a-zA-Z0-9_]+$',
+            message='Слаг жанра содержит недопустимый символ'
+        )]
     )
 
     class Meta:

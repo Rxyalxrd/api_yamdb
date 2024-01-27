@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Avg
 from rest_framework.filters import SearchFilter
 from django.shortcuts import get_object_or_404
 from reviews.models import Category, Genre, Title, Review
@@ -36,7 +37,9 @@ class GenreViewSet(ModelMixinSet):
 class TitleViewSet(ModelMixinSet):
     """Вьюсет для работы с произведениями."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).all()
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
