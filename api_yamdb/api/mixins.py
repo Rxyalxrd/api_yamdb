@@ -7,6 +7,6 @@ class ModelMixinSet(
     CreateModelMixin, DestroyModelMixin,
     ListModelMixin, GenericViewSet
 ):
-    """Миксин для моделей Category и Genre."""
+    """Миксин для моделей Category, Genre и Title."""
 
     pass
