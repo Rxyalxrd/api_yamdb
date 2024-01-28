@@ -1,10 +1,8 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class IsAdmin(BasePermission):
-    """
-    Права для пользователя с ролью администратора и для суперпользователя.
-    """
+    """Пользователь с ролью администратора и для суперпользователя."""
 
     def has_permission(self, request, view):
         return (
@@ -14,45 +12,31 @@ class IsAdmin(BasePermission):
         )
 
 
-class IsModerator(BasePermission):
-    """Права для пользователя с ролью модератора."""
+class IsAdminOrReadOnly(BasePermission):
+    """Администратор или только чтение."""
+
+    def has_permission(self, request, view):
+        return (
+            request.method in SAFE_METHODS
+            or (request.user.is_authenticated and request.user.role == 'admin')
+        )
 
     def has_object_permission(self, request, view, obj):
         return (
-            request.user.is_authenticated and request.user.role == 'moderator'
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+            and request.user.role == 'admin'
         )
 
 
-class IsAuthorOrReadOnly(BasePermission):
-    """
-    Права на редактирование и удаление собственных публикаций/комменатриев.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        return request.method in SAFE_METHODS or obj.author == request.user
-
-
-class IsAdminOrReadOnly(BasePermission):
-    """Администратор или только чтение"""
-
-    def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-        if request.user.is_authenticated:
-            return request.user.role == 'admin'
-        return False
-    
-    def has_object_permission(self, request, view, obj):
-        return request.method in SAFE_METHODS or request.user.is_authenticated and request.user.role == 'admin'
-
-# class IsAdminOrReadOnly(BasePermission):
-
-#     def has_object_permission(self, request, view, obj):
-#         return request.method in SAFE_METHODS or request.user.is_authenticated and request.user.role == 'admin'
-
 class AdminModeratorAuthorOrReadOnly(BasePermission):
+    """Редактирование админом, модератором или автором."""
+
     def has_permission(self, request, view):
-        return request.method in SAFE_METHODS or request.user.is_authenticated
+        return (
+            request.method in SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
         return (

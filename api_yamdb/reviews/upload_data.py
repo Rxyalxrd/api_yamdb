@@ -3,7 +3,9 @@ import csv
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import (
+    Category, Comment, Genre, Review, Title, User
+)
 
 TABLES = {
     User: 'users.csv',
@@ -16,6 +18,8 @@ TABLES = {
 
 
 class Command(BaseCommand):
+    """Скрипт, который заполняет БД csv файлами."""
+
     def handle(self, *args, **kwargs):
         for model, csv_f in TABLES.items():
             with open(
