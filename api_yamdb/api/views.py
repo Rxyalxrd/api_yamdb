@@ -66,7 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(
                 request.user, data=request.data, partial=True
             )
-            if serializer.is_valid() and 'role' not in request.data:
+            if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(
@@ -91,10 +91,8 @@ class SendEmailConfirmation(APIView):
         if username in User.objects.values_list('username', flat=True):
             user = get_object_or_404(User, username=username)
             if user.email != email:
-                return Response(
-                    {"email": "Неверный адрес электронной почты!"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                if not serializer.is_valid():
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             user.user_confirmation_code = generate_user_confirmation_code()
             user.save()
             send_mail_with_confirmation_code(user)

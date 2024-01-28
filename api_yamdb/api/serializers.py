@@ -11,6 +11,7 @@ from reviews.models import (
     Review,
     EmailConfirmation,
     User,
+    ROLE,
 )
 
 
@@ -35,6 +36,13 @@ class UserSerializer(serializers.ModelSerializer):
                 'Нельзя использовать "me" в качестве username!'
             )
         return value
+
+    def update(self, instance, validated_data):
+        """Переопределение метода update для предотвращения изменения роли."""
+        user = self.context['request'].user
+        if 'role' in validated_data and user.role != 'admin':
+            validated_data.pop('role')  # Удаляем поле 'role' из данных
+        return super().update(instance, validated_data)
 
 
 class SendEmailSerializer(serializers.ModelSerializer):
