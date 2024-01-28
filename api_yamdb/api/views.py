@@ -33,6 +33,7 @@ from .utils import (
     send_mail_with_confirmation_code,
 )
 from reviews.models import User, Category, Genre, Title, Review
+from .mixins import ModelMixinSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -127,7 +128,7 @@ class SendToken(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(ModelMixinSet):
     """Вьюсет для работы с категориями."""
 
     queryset = Category.objects.all()
@@ -139,7 +140,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(ModelMixinSet):
     """Вьюсет для работы с жанрами."""
 
     queryset = Genre.objects.all()
@@ -199,4 +200,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        author = self.request.user
+        existing_review = Review.objects.filter(title=title,
+                                                author=author).first()
+        if existing_review:
+            serializer.update(existing_review, serializer.validated_data)
+        else:
+            serializer.save(author=author, title=title)
