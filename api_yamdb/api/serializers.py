@@ -2,7 +2,15 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from .utils import generate_user_confirmation_code
-from reviews.models import EmailConfirmation, User
+from reviews.models import (
+    Category,
+    Genre,
+    Title,
+    Comment,
+    Review,
+    EmailConfirmation,
+    User,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -68,9 +76,6 @@ class EmailConfirmationSerializer(serializers.ModelSerializer):
         if user.user_confirmation_code != confirmation_code:
             raise serializers.ValidationError('Неверный код подтверждения!')
         return data
-from rest_framework import serializers
-
-from reviews.models import Category, Genre, Title, Comment, Review
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -146,13 +151,9 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов."""
 
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True
-    )
+    title = serializers.SlugRelatedField(slug_field='name', read_only=True)
     author = serializers.SlugRelatedField(
-        slug_field='username',
-        read_only=True
+        slug_field='username', read_only=True
     )
 
     class Meta:

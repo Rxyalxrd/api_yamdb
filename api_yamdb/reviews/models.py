@@ -1,5 +1,12 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models
+
+from .validators import validate_year
 
 ROLE = (
     ('admin', 'администратор'),
@@ -32,53 +39,6 @@ class EmailConfirmation(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='confirmations'
     )
-
-
-from django.core.validators import (
-    MaxValueValidator,
-    MinValueValidator,
-    RegexValidator,
-)
-from django.contrib.auth.models import AbstractUser
-
-from .validators import validate_year
-
-
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-
-ROLE = [
-    (USER, USER),
-    (ADMIN, ADMIN),
-    (MODERATOR, MODERATOR),
-]
-
-
-class User(AbstractUser):
-    bio = models.TextField(blank=True)
-    email = models.EmailField(unique=True)
-    role = models.CharField(max_length=15, choices=ROLE, default='user')
-
-    @property
-    def is_user(self):
-        return self.role == USER
-
-    @property
-    def is_admin(self):
-        return self.role == ADMIN
-
-    @property
-    def is_moderator(self):
-        return self.role == MODERATOR
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-
-    def __str__(self):
-        return self.username
 
 
 class Category(models.Model):

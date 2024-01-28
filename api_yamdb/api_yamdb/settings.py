@@ -22,8 +22,6 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'rest_framework_simplejwt',
     'django_filters',
-    'reviews',
-    'api',
 ]
 
 MIDDLEWARE = [
@@ -106,6 +104,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
 }
 
 SIMPLE_JWT = {
