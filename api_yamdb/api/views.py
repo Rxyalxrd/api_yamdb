@@ -10,7 +10,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from .filters import TitleFilter
 
-# from .mixins import ModelMixinSet
 from .permissions import (
     IsAdmin,
     IsAdminOrReadOnly,
