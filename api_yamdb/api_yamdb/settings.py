@@ -21,6 +21,9 @@ INSTALLED_APPS = [
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
     'rest_framework_simplejwt',
+    'django_filters',
+    'reviews',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -103,13 +106,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_PAGINATION_CLASS': (
-        'rest_framework.pagination.LimitOffsetPagination'
-    ),
-    'PAGE_SIZE': 10,
 }
-
-EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
