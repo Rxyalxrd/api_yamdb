@@ -21,7 +21,7 @@ router.register(
 router.register(
     'categories',
     CategoryViewSet,
-    basename='сategories'
+    basename='categories'
 )
 router.register(
     'titles',
