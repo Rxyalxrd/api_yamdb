@@ -1,2 +1,6 @@
 # api_yamdb
 api_yamdb
+REASDA:LKSDL:
+A:LSD:LAKSDl
+A:LSDK:LASDKL:A
+AL:"KSDKL:ASDKL:

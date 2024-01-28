@@ -1,7 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-
 
 ROLE = (
     ('admin', 'администратор'),
@@ -11,6 +9,24 @@ ROLE = (
 
 
 class User(AbstractUser):
-    bio = models.TextField(blank=True)
-    email = models.EmailField(unique=True)
-    role = models.CharField(max_length=15, choices=ROLE, default='user')
+    """Кастомная модель позователя."""
+
+    bio = models.TextField('О себе', blank=True)
+    email = models.EmailField('Электронная почта', unique=True)
+    role = models.CharField(
+        'Роль', max_length=15, choices=ROLE, default='user'
+    )
+    user_confirmation_code = models.CharField(
+        'Код подтверждения', max_length=5, blank=True, unique=True
+    )
+
+
+class EmailConfirmation(models.Model):
+    """Модель для подтверждения учетной записи."""
+
+    confirmation_code = models.CharField(
+        'Код подтверждения', max_length=5, unique=True
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='confirmations'
+    )
