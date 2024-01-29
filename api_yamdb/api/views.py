@@ -27,6 +27,7 @@ from .serializers import (
     TitleCreateSerializer,
     CommentSerializer,
     ReviewSerializer,
+    # UserSerializerWithoutRole
 )
 from .utils import (
     generate_user_confirmation_code,
@@ -48,6 +49,13 @@ class UserViewSet(viewsets.ModelViewSet):
         IsAdmin,
     ]
     http_method_names = ['get', 'post', 'patch', 'delete']
+
+    # def get_serializer_class(self):
+    #     serializer_class = self.serializer_class
+    #     if self.request.method == 'PATCH':
+    #         serializer_class= UserSerializerWithoutRole
+
+    #     return serializer_class
 
     @action(
         detail=False,
