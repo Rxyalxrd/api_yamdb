@@ -3,8 +3,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.models import (
-    Category, Comment, EmailConfirmation,
-    Genre, Review, Title, User
+    Category,
+    Comment,
+    EmailConfirmation,
+    Genre,
+    Review,
+    Title,
+    User,
 )
 from .utils import generate_user_confirmation_code
 
@@ -33,10 +38,14 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        """Переопределение метода update для предотвращения изменения роли."""
+        """Обновление роли только администратором или суперпользователем."""
         user = self.context['request'].user
-        if 'role' in validated_data and user.role != 'admin':
-            validated_data.pop('role')  # Удаляем поле 'role' из данных
+        if (
+            'role' in validated_data
+            and not user.is_admin
+            and not user.is_superuser
+        ):
+            validated_data.pop('role')
         return super().update(instance, validated_data)
 
 
@@ -87,9 +96,7 @@ class EmailConfirmationSerializer(serializers.ModelSerializer):
         confirmation_code = data.get('confirmation_code')
         user = get_object_or_404(User, username=username)
         if user.user_confirmation_code != confirmation_code:
-            raise serializers.ValidationError(
-                'Неверный код подтверждения!'
-            )
+            raise serializers.ValidationError('Неверный код подтверждения!')
         return data
 
 
@@ -98,9 +105,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = (
-            'id',
-        )
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -108,9 +113,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = (
-            'id',
-        )
+        exclude = ('id',)
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -190,9 +193,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             request.method == 'POST'
             and Review.objects.filter(title=title, author=author).exists()
         ):
-            raise ValidationError(
-                'Может существовать только один отзыв!'
-            )
+            raise ValidationError('Может существовать только один отзыв!')
         return data
 
     class Meta:
