@@ -135,6 +135,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug',
     )
+    rating = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title
@@ -158,6 +159,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
+        exclude = 'id'
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -205,4 +207,5 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
+        exclude = 'title'
         fields = '__all__'

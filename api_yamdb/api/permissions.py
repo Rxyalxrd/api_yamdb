@@ -20,13 +20,6 @@ class IsAdminOrReadOnly(BasePermission):
             or (request.user.is_authenticated and request.user.is_admin)
         )
 
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method in SAFE_METHODS
-            or request.user.is_authenticated
-            and request.user.is_admin
-        )
-
 
 class AdminModeratorAuthorOrReadOnly(BasePermission):
     """Редактирование админом, модератором или автором."""

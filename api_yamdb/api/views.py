@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
@@ -120,11 +121,6 @@ class CategoryViewSet(ModelMixinSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class GenreViewSet(ModelMixinSet):
@@ -132,11 +128,6 @@ class GenreViewSet(ModelMixinSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -147,6 +138,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         """Возвращает класс сериализатора в зависимости от действия."""
@@ -182,6 +174,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (AdminModeratorAuthorOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         """Получает и возвращает список отзывов для конкретного заголовка."""

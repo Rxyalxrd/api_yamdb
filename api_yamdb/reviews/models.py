@@ -46,10 +46,6 @@ class User(AbstractUser):
     def is_moderator(self):
         return self.role == 'moderator'
 
-    @property
-    def is_user(self):
-        return self.role == 'user'
-
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -77,6 +73,7 @@ class Category(models.Model):
     """Модель категории."""
 
     name = models.CharField(
+        unique=True,
         verbose_name='Название категории',
         max_length=256
     )
@@ -105,6 +102,7 @@ class Genre(models.Model):
     """Модель Жанров."""
 
     name = models.CharField(
+        unique=True,
         verbose_name='Название жанра',
         max_length=256,
     )
