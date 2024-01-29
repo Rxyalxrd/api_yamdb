@@ -1,38 +1,27 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, viewsets, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
+from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
-
+from .mixins import ModelMixinSet
 from .permissions import (
-    IsAdmin,
-    IsAdminOrReadOnly,
-    IsAdminModeratorAuthorOrReadOnly,
+    AdminModeratorAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
 )
 from .serializers import (
-    EmailConfirmationSerializer,
-    SendEmailSerializer,
-    UserSerializer,
-    CategorySerializer,
-    GenreSerializer,
-    TitleReadSerializer,
-    TitleCreateSerializer,
-    CommentSerializer,
-    ReviewSerializer,
-    UserEditSerializer,
+    CategorySerializer, CommentSerializer, EmailConfirmationSerializer,
+    GenreSerializer, ReviewSerializer, SendEmailSerializer,
+    TitleCreateSerializer, TitleReadSerializer, UserSerializer
 )
 from .utils import (
-    generate_user_confirmation_code,
-    send_mail_with_confirmation_code,
+    generate_user_confirmation_code, send_mail_with_confirmation_code
 )
-from reviews.models import User, Category, Genre, Title, Review
-from .mixins import ModelMixinSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -43,17 +32,14 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    permission_classes = [
-        IsAdmin,
-    ]
+    permission_classes = (IsAdmin,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
         detail=False,
         url_path='me',
         methods=['GET', 'PATCH'],
-        permission_classes=[IsAuthenticated],
-        serializer_class=UserEditSerializer,
+        permission_classes=(IsAuthenticated,),
     )
     def self_information(self, request, pk=None):
         """
@@ -61,14 +47,19 @@ class UserViewSet(viewsets.ModelViewSet):
         Вносит изменения в данные учетной записи пользователя
         сделавшего PATCH-запрос.
         """
+
         serializer = self.get_serializer(request.user)
         if request.method == 'PATCH':
             serializer = self.get_serializer(
                 request.user, data=request.data, partial=True
             )
-            serializer.is_valid()
-            serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(serializer.data)
 
 
 class SendEmailConfirmation(APIView):
@@ -81,16 +72,16 @@ class SendEmailConfirmation(APIView):
         Создать пользователя в БД и отправить на почту
         код подтверждения учетной записи.
         """
+
         serializer = SendEmailSerializer(data=request.data)
         username = request.data.get('username')
         email = request.data.get('email')
         if username in User.objects.values_list('username', flat=True):
             user = get_object_or_404(User, username=username)
             if user.email != email:
-                return Response(
-                    {"email": "Неверный адрес электронной почты!"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                if not serializer.is_valid():
+                    return Response(serializer.errors,
+                                    status=status.HTTP_400_BAD_REQUEST)
             user.user_confirmation_code = generate_user_confirmation_code()
             user.save()
             send_mail_with_confirmation_code(user)
@@ -98,7 +89,7 @@ class SendEmailConfirmation(APIView):
         if serializer.is_valid():
             serializer.save()
             user = get_object_or_404(
-                User, username=serializer.validated_data['username']
+                User, username=serializer.validated_data.get('username')
             )
             send_mail_with_confirmation_code(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -117,7 +108,7 @@ class SendToken(APIView):
         """Получить токен авторизации."""
         serializer = EmailConfirmationSerializer(data=request.data)
         if serializer.is_valid():
-            username = serializer.validated_data['username']
+            username = serializer.validated_data.get('username')
             user = get_object_or_404(User, username=username)
             token = AccessToken.for_user(user)
             return Response({"token": str(token)}, status=status.HTTP_200_OK)
@@ -158,6 +149,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
+        """Возвращает класс сериализатора в зависимости от действия."""
+
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleCreateSerializer
@@ -167,16 +160,18 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями."""
 
     serializer_class = CommentSerializer
-    permission_classes = (
-        IsAdminModeratorAuthorOrReadOnly,
-    )
+    permission_classes = (AdminModeratorAuthorOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
+        """Получает и возвращает список комментариев для конкретного отзыва."""
+
         review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
         return review.comments.all()
 
     def perform_create(self, serializer):
+        """Создает новый комментарий для отзыва."""
+
         review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
         serializer.save(author=self.request.user, review=review)
 
@@ -185,20 +180,23 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (
-        IsAdminModeratorAuthorOrReadOnly,
-    )
+    permission_classes = (AdminModeratorAuthorOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
+        """Получает и возвращает список отзывов для конкретного заголовка."""
+
         title = get_object_or_404(Title, id=self.kwargs.get("title_id"))
         return title.reviews.all()
 
     def perform_create(self, serializer):
+        """Создает новый отзыв или обновляет существующий."""
+
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         author = self.request.user
-        existing_review = Review.objects.filter(title=title,
-                                                author=author).first()
+        existing_review = Review.objects.filter(
+            title=title, author=author
+        ).first()
         if existing_review:
             serializer.update(existing_review, serializer.validated_data)
         else:
