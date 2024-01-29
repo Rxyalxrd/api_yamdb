@@ -1,22 +1,16 @@
-from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from .utils import generate_user_confirmation_code
 from reviews.models import (
-    Category,
-    Genre,
-    Title,
-    Comment,
-    Review,
-    EmailConfirmation,
-    User,
-    ROLE,
+    Category, Comment, EmailConfirmation,
+    Genre, Review, Title, User
 )
+from .utils import generate_user_confirmation_code
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с пользователями."""
+    """Сериализатор для работы c пользователями."""
 
     class Meta:
         model = User
@@ -31,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         """Валидация имени пользователя."""
+
         if value == 'me':
             raise serializers.ValidationError(
                 'Нельзя использовать "me" в качестве username!'
@@ -50,10 +45,14 @@ class SendEmailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email')
+        fields = (
+            'username',
+            'email',
+        )
 
     def validate_username(self, value):
         """Валидация имени пользователя."""
+
         if value == 'me':
             raise serializers.ValidationError(
                 'Нельзя использовать "me" в качестве username!'
@@ -62,6 +61,7 @@ class SendEmailSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Создать пользователя и присвоить ему код подтверждения."""
+
         user = User.objects.create(**validated_data)
         user.user_confirmation_code = generate_user_confirmation_code()
         user.save()
@@ -75,15 +75,21 @@ class EmailConfirmationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EmailConfirmation
-        fields = ('username', 'confirmation_code')
+        fields = (
+            'username',
+            'confirmation_code',
+        )
 
     def validate(self, data):
         """Валидация кода подтверждения."""
-        username = data['username']
-        confirmation_code = data['confirmation_code']
+
+        username = data.get('username')
+        confirmation_code = data.get('confirmation_code')
         user = get_object_or_404(User, username=username)
         if user.user_confirmation_code != confirmation_code:
-            raise serializers.ValidationError('Неверный код подтверждения!')
+            raise serializers.ValidationError(
+                'Неверный код подтверждения!'
+            )
         return data
 
 
@@ -92,7 +98,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = ('id',)
+        exclude = (
+            'id',
+        )
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -100,7 +108,9 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ('id',)
+        exclude = (
+            'id',
+        )
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -160,13 +170,19 @@ class CommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов."""
 
-    title = serializers.SlugRelatedField(slug_field='name', read_only=True)
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True,
+    )
     author = serializers.SlugRelatedField(
-        slug_field='username', read_only=True
+        slug_field='username',
+        read_only=True,
     )
 
     def validate(self, data):
-        request = self.context['request']
+        """Проверяет валидность данных перед сохранением."""
+
+        request = self.context.get('request')
         author = request.user
         title_id = self.context.get('view').kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
@@ -174,7 +190,9 @@ class ReviewSerializer(serializers.ModelSerializer):
             request.method == 'POST'
             and Review.objects.filter(title=title, author=author).exists()
         ):
-            raise ValidationError('Может существовать только один отзыв!')
+            raise ValidationError(
+                'Может существовать только один отзыв!'
+            )
         return data
 
     class Meta:
