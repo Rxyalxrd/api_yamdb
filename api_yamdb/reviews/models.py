@@ -6,28 +6,71 @@ from django.core.validators import (
 )
 from django.db import models
 
-from .validators import validate_year
+from .validators import validate_year, validate_username
 
-ROLE = (
-    ('admin', 'администратор'),
-    ('moderator', 'модератор'),
-    ('user', 'пользователь'),
-)
+
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+
+ROLE = [
+    (USER, USER),
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+]
 
 
 class User(AbstractUser):
     """Кастомная модель позователя."""
 
-    bio = models.TextField('О себе', blank=True)
-    email = models.EmailField('Электронная почта', unique=True)
+    username = models.CharField(
+        validators=(validate_username,)
+        )
+
+    bio = models.TextField(
+        'О себе',
+        blank=True
+    )
+    email = models.EmailField(
+        'Электронная почта',
+        max_length=254,
+        unique=True,
+        blank=False,
+        null=False
+    )
     role = models.CharField(
-        'Роль', max_length=15, choices=ROLE, default='user'
+        'Роль',
+        max_length=15,
+        choices=ROLE,
+        default=USER,
+        blank=True
     )
     user_confirmation_code = models.CharField(
         'Код подтверждения',
         max_length=5,
-        blank=True,
+        null=True,
+        blank=False,
     )
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN or self.is_superuser or self.is_staff
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class EmailConfirmation(models.Model):
@@ -100,7 +143,7 @@ class Title(models.Model):
     year = models.IntegerField(
         verbose_name='Год создания',
         null=True,
-        help_text='Год выхода',
+        help_text='Год создания',
         validators=[validate_year],
     )
     category = models.ForeignKey(

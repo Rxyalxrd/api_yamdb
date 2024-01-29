@@ -13,9 +13,7 @@ from .filters import TitleFilter
 from .permissions import (
     IsAdmin,
     IsAdminOrReadOnly,
-    AdminModeratorAuthorOrReadOnly,
-    IsModerator,
-    IsAuthorOrReadOnly,
+    IsAdminModeratorAuthorOrReadOnly,
 )
 from .serializers import (
     EmailConfirmationSerializer,
@@ -27,6 +25,7 @@ from .serializers import (
     TitleCreateSerializer,
     CommentSerializer,
     ReviewSerializer,
+    UserEditSerializer,
 )
 from .utils import (
     generate_user_confirmation_code,
@@ -54,6 +53,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='me',
         methods=['GET', 'PATCH'],
         permission_classes=[IsAuthenticated],
+        serializer_class=UserEditSerializer,
     )
     def self_information(self, request, pk=None):
         """
@@ -66,13 +66,9 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(
                 request.user, data=request.data, partial=True
             )
-            if serializer.is_valid() and 'role' not in request.data:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
-        return Response(serializer.data)
+            serializer.is_valid()
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SendEmailConfirmation(APIView):
@@ -172,8 +168,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = (
-        AdminModeratorAuthorOrReadOnly,
-    )  # AdminModeratorAuthorPermission
+        IsAdminModeratorAuthorOrReadOnly,
+    )
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
@@ -190,8 +186,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     permission_classes = (
-        AdminModeratorAuthorOrReadOnly,
-    )  # AdminModeratorAuthorPermissionIsAdmin,IsModerator,IsAuthorOrReadOnly
+        IsAdminModeratorAuthorOrReadOnly,
+    )
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):

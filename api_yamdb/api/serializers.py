@@ -27,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role',
         )
+        lookup_field = ('username',)
 
     def validate_username(self, value):
         """Валидация имени пользователя."""
@@ -35,6 +36,12 @@ class UserSerializer(serializers.ModelSerializer):
                 'Нельзя использовать "me" в качестве username!'
             )
         return value
+
+
+class UserEditSerializer(UserSerializer):
+    """Серидизатор для редактирования user"""
+
+    role = serializers.CharField(read_only=True)
 
 
 class SendEmailSerializer(serializers.ModelSerializer):
@@ -48,7 +55,7 @@ class SendEmailSerializer(serializers.ModelSerializer):
         """Валидация имени пользователя."""
         if value == 'me':
             raise serializers.ValidationError(
-                'Нельзя использовать "me" в качестве username!'
+                'Имя "me" не разрешено!'
             )
         return value
 
