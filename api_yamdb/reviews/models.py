@@ -34,13 +34,12 @@ class User(AbstractUser):
     user_confirmation_code = models.CharField(
         'Код подтверждения',
         max_length=5,
-        null=True,
-        blank=False,
+        blank=True,
     )
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_superuser or self.is_staff
+        return self.role == 'admin'
 
     @property
     def is_moderator(self):
@@ -137,22 +136,20 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Год создания',
-        null=True,
+        default=0,
         help_text='Год создания',
         validators=[validate_year],
     )
     category = models.ForeignKey(
         Category,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='titles',
         verbose_name='Категория',
-        null=True,
         blank=True,
     )
     description = models.TextField(
         verbose_name='Описание',
         max_length=255,
-        null=True,
         blank=True,
     )
     genre = models.ManyToManyField(

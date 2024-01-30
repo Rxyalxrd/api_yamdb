@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 from rest_framework import serializers
 
 from reviews.models import (
@@ -48,12 +49,6 @@ class UserSerializer(serializers.ModelSerializer):
         ):
             validated_data.pop('role')
         return super().update(instance, validated_data)
-
-
-class UserEditSerializer(UserSerializer):
-    """Серидизатор для редактирования user"""
-
-    role = serializers.CharField(read_only=True)
 
 
 class SendEmailSerializer(serializers.ModelSerializer):
@@ -112,7 +107,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        exclude = ('id',)
+        fields = ('name', 'slug',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -120,7 +115,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        exclude = ('id',)
+        fields = ('name', 'slug',)
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -135,11 +130,17 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug',
     )
-    rating = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title
-        fields = '__all__'
+        fields = ('name', 'year', 'category', 'description',
+                  'genre', 'id')
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        serializers = TitleReadSerializer(instance, context=context)
+        return serializers.data
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
@@ -147,19 +148,20 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(
         many=True,
-        read_only=True,
     )
     category = CategorySerializer(
-        read_only=True,
     )
-    rating = serializers.IntegerField(
-        read_only=True,
-    )
+    rating = serializers.IntegerField(default=0)
 
     class Meta:
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category', 'rating'
+        )
         model = Title
-        fields = '__all__'
-        exclude = 'id'
+
+    def get_rating(self, obj):
+        return Review.objects.filter(title=obj.id).aggregate(
+            Avg('score'))['score__avg']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -169,23 +171,15 @@ class CommentSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True,
     )
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True,
-    )
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов."""
 
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True,
-    )
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -207,5 +201,4 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        exclude = 'title'
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
