@@ -1,9 +1,8 @@
 from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
-
 from reviews.models import (
     Category,
     Comment,
@@ -13,6 +12,7 @@ from reviews.models import (
     Title,
     User,
 )
+
 from .utils import generate_user_confirmation_code
 
 
@@ -66,9 +66,7 @@ class SendEmailSerializer(serializers.ModelSerializer):
         """Валидация имени пользователя."""
 
         if value == 'me':
-            raise serializers.ValidationError(
-                'Имя "me" не разрешено!'
-            )
+            raise serializers.ValidationError('Имя "me" не разрешено!')
         return value
 
     def create(self, validated_data):
@@ -108,7 +106,10 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug',)
+        fields = (
+            'name',
+            'slug',
+        )
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -116,7 +117,10 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('name', 'slug',)
+        fields = (
+            'name',
+            'slug',
+        )
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -131,11 +135,11 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         slug_field='slug',
     )
+    year = serializers.IntegerField(required=True)
 
     class Meta:
         model = Title
-        fields = ('name', 'year', 'category', 'description',
-                  'genre', 'id')
+        fields = ('name', 'year', 'category', 'description', 'genre', 'id')
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -157,19 +161,25 @@ class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(
         many=True,
     )
-    category = CategorySerializer(
-    )
-    rating = serializers.IntegerField(default=0)
+    category = CategorySerializer()
+    rating = serializers.FloatField(default=0.0)
 
     class Meta:
         fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category', 'rating'
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+            'rating',
         )
         model = Title
 
     def get_rating(self, obj):
-        return Review.objects.filter(title=obj.id).aggregate(
-            Avg('score'))['score__avg']
+        return Review.objects.filter(title=obj.id).aggregate(Avg('score'))[
+            'score__avg'
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -1,15 +1,17 @@
-from rest_framework.mixins import (
-    CreateModelMixin, DestroyModelMixin, ListModelMixin
-)
-from rest_framework.viewsets import GenericViewSet
-from .permissions import IsAdminOrReadOnly
 from rest_framework import filters
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+)
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.viewsets import GenericViewSet
+
+from .permissions import IsAdminOrReadOnly
 
 
 class ModelMixinSet(
-    CreateModelMixin, ListModelMixin,
-    DestroyModelMixin, GenericViewSet
+    CreateModelMixin, ListModelMixin, DestroyModelMixin, GenericViewSet
 ):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)

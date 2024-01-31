@@ -1,11 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
-    MaxValueValidator, MinValueValidator, RegexValidator
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
 )
 from django.db import models
 
 from .validators import validate_year
-
 
 ROLE = (
     ('admin', 'администратор'),
@@ -21,10 +22,7 @@ class User(AbstractUser):
         'О себе',
         blank=True,
     )
-    email = models.EmailField(
-        'Электронная почта',
-        unique=True
-    )
+    email = models.EmailField('Электронная почта', unique=True)
     role = models.CharField(
         'Роль',
         max_length=15,
@@ -72,9 +70,7 @@ class Category(models.Model):
     """Модель категории."""
 
     name = models.CharField(
-        unique=True,
-        verbose_name='Название категории',
-        max_length=256
+        unique=True, verbose_name='Название категории', max_length=256
     )
     slug = models.SlugField(
         verbose_name='Слаг категории',
@@ -142,9 +138,10 @@ class Title(models.Model):
     )
     category = models.ForeignKey(
         Category,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_DEFAULT,
         related_name='titles',
         verbose_name='Категория',
+        default='Категория не определена',
         blank=True,
     )
     description = models.TextField(
@@ -187,10 +184,7 @@ class Review(models.Model):
         verbose_name='Автор отзыва.',
     )
     score = models.IntegerField(
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10)
-        ],
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name="Оценка от 1 до 10.",
     )
     pub_date = models.DateTimeField(

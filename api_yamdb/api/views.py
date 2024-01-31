@@ -3,25 +3,34 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import LimitOffsetPagination
-
 from reviews.models import Category, Genre, Review, Title, User
+
 from .filters import TitleFilter
 from .mixins import ModelMixinSet
 from .permissions import (
-    AdminModeratorAuthorOrReadOnly, IsAdmin, IsAdminOrReadOnly
+    AdminModeratorAuthorOrReadOnly,
+    IsAdmin,
+    IsAdminOrReadOnly,
 )
 from .serializers import (
-    CategorySerializer, CommentSerializer, EmailConfirmationSerializer,
-    GenreSerializer, ReviewSerializer, SendEmailSerializer,
-    TitleCreateSerializer, TitleReadSerializer, UserSerializer
+    CategorySerializer,
+    CommentSerializer,
+    EmailConfirmationSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    SendEmailSerializer,
+    TitleCreateSerializer,
+    TitleReadSerializer,
+    UserSerializer,
 )
 from .utils import (
-    generate_user_confirmation_code, send_mail_with_confirmation_code
+    generate_user_confirmation_code,
+    send_mail_with_confirmation_code,
 )
 
 
@@ -81,8 +90,9 @@ class SendEmailConfirmation(APIView):
             user = get_object_or_404(User, username=username)
             if user.email != email:
                 if not serializer.is_valid():
-                    return Response(serializer.errors,
-                                    status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                    )
             user.user_confirmation_code = generate_user_confirmation_code()
             user.save()
             send_mail_with_confirmation_code(user)
@@ -159,7 +169,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         """Получает объект класса Review."""
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         return get_object_or_404(
-            Review, pk=self.kwargs.get('review_id'), title=title)
+            Review, pk=self.kwargs.get('review_id'), title=title
+        )
 
     def get_queryset(self):
         """Получает и возвращает список комментариев для конкретного отзыва."""

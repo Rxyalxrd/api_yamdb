@@ -7,7 +7,5 @@ def validate_year(value):
 
     now = timezone.now().year
     if value <= 0 or value > now:
-        raise ValidationError(
-            f'{value} должен быть меньше или равен {now}!'
-        )
+        raise ValidationError(f'{value} должен быть меньше или равен {now}!')
     return value
