@@ -155,17 +155,24 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminModeratorAuthorOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    def get_review(self):
+        """Получает объект класса Review."""
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return get_object_or_404(
+            Review, pk=self.kwargs.get('review_id'), title=title)
+
     def get_queryset(self):
         """Получает и возвращает список комментариев для конкретного отзыва."""
 
-        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
+        review = self.get_review()
         return review.comments.all()
 
     def perform_create(self, serializer):
         """Создает новый комментарий для отзыва."""
 
-        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
-        serializer.save(author=self.request.user, review=review)
+        author = self.request.user
+        review = self.get_review()
+        serializer.save(author=author, review=review)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -175,6 +182,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminModeratorAuthorOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
     pagination_class = LimitOffsetPagination
+
+    def get_title(self):
+        """Получает объект класса Title."""
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         """Получает и возвращает список отзывов для конкретного заголовка."""

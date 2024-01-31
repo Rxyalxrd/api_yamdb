@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews.models import (
@@ -139,8 +140,15 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
-        serializers = TitleReadSerializer(instance, context=context)
-        return serializers.data
+        return TitleReadSerializer(instance, context=context).data
+
+    def validate_year(self, value):
+        now = timezone.now().year
+        if value <= 0 or value > now:
+            raise serializers.ValidationError(
+                f'{value} должен быть меньше или равен {now}!'
+            )
+        return value
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
