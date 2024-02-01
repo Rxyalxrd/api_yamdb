@@ -1,5 +1,4 @@
 from django.core.exceptions import ValidationError
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
@@ -176,11 +175,6 @@ class TitleReadSerializer(serializers.ModelSerializer):
         )
         model = Title
 
-    def get_rating(self, obj):
-        return Review.objects.filter(title=obj.id).aggregate(Avg('score'))[
-            'score__avg'
-        ]
-
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
@@ -207,14 +201,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         """Проверяет валидность данных перед сохранением."""
 
         request = self.context.get('request')
+
+        if request.method != 'POST':
+            return data
+
         author = request.user
         title_id = self.context.get('view').kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
-        if (
-            request.method == 'POST'
-            and Review.objects.filter(title=title, author=author).exists()
-        ):
+
+        if Review.objects.filter(title=title, author=author).exists():
             raise ValidationError('Может существовать только один отзыв!')
+
         return data
 
     class Meta:
