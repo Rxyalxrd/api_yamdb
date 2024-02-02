@@ -8,6 +8,8 @@ from api_yamdb.const import (
     LEN_FOR_CONF_CODE,
     LEN_FOR_SLUG,
     LEN_FOR_NAME,
+    MIN_REVIEW_SCORE,
+    MAX_REVIEW_SCORE,
 )
 from .validators import validate_year
 from .user import User
@@ -82,7 +84,6 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Год создания',
-        default=0,
         help_text='Год создания',
         validators=[validate_year],
     )
@@ -133,10 +134,16 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1, message='Значение должно быть не менее 1.'),
-            MaxValueValidator(10, message='Значение должно быть не более 10.'),
+            MinValueValidator(
+                MIN_REVIEW_SCORE,
+                message=f'Значение должно быть не менее {MIN_REVIEW_SCORE}.',
+            ),
+            MaxValueValidator(
+                MAX_REVIEW_SCORE,
+                message=f'Значение должно быть не более {MAX_REVIEW_SCORE}.',
+            ),
         ],
-        verbose_name='Оценка от 1 до 10.',
+        verbose_name=f'Оценка от {MIN_REVIEW_SCORE} до {MAX_REVIEW_SCORE}.',
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
