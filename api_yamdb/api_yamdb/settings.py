@@ -123,4 +123,4 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'reviews.User'
 
-EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'

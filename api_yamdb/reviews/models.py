@@ -1,16 +1,13 @@
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
-    RegexValidator,
 )
 from django.db import models
 
 from api_yamdb.const import (
     LEN_FOR_CONF_CODE,
-    LEN_FOR_DESC,
     LEN_FOR_SLUG,
     LEN_FOR_NAME,
-    LEN_FOR_TEXT,
 )
 from .validators import validate_year
 from .user import User
@@ -35,19 +32,13 @@ class Category(models.Model):
     """Модель категории."""
 
     name = models.CharField(
-        unique=True, verbose_name='Название категории', max_length=256
+        unique=True, verbose_name='Название категории', max_length=LEN_FOR_NAME
     )
     slug = models.SlugField(
         verbose_name='Слаг категории',
         unique=True,
         db_index=True,
         max_length=LEN_FOR_SLUG,
-        validators=[
-            RegexValidator(
-                regex=r'^[-a-zA-Z0-9_]+$',
-                message='Слаг категории содержит недопустимый символ',
-            )
-        ],
     )
 
     class Meta:
@@ -71,11 +62,6 @@ class Genre(models.Model):
         unique=True,
         db_index=True,
         max_length=LEN_FOR_SLUG,
-        validators=[
-            RegexValidator(
-                message='Слаг жанра содержит недопустимый символ',
-            )
-        ],
     )
 
     class Meta:
@@ -105,12 +91,11 @@ class Title(models.Model):
         on_delete=models.SET_DEFAULT,
         related_name='titles',
         verbose_name='Категория',
-        default='Категория не определена',
+        default='Категория не определена.',
         blank=True,
     )
     description = models.TextField(
         verbose_name='Описание',
-        max_length=LEN_FOR_DESC,
         blank=True,
     )
     genre = models.ManyToManyField(
@@ -136,10 +121,9 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='произведение',
     )
-    text = models.CharField(
-        max_length=LEN_FOR_TEXT,
+    text = models.TextField(
         null=False,
-        verbose_name="Текст отзыва.",
+        verbose_name='Текст отзыва.',
     )
     author = models.ForeignKey(
         User,
@@ -185,7 +169,6 @@ class Comment(models.Model):
         verbose_name='Отзыв.',
     )
     text = models.TextField(
-        max_length=LEN_FOR_TEXT,
         verbose_name='Текст комментария.',
         null=False,
     )

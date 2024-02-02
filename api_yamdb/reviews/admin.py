@@ -69,7 +69,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_filter = ('author', 'review', 'pub_date')
 
 
-admin.site.register(User)
+admin.site.register(User, UserAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Title, TitleAdmin)

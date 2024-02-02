@@ -122,7 +122,7 @@ class SendToken(APIView):
             username = serializer.validated_data.get('username')
             user = get_object_or_404(User, username=username)
             token = AccessToken.for_user(user)
-            return Response({"token": str(token)}, status=status.HTTP_200_OK)
+            return Response({'token': str(token)}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -201,18 +201,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Получает и возвращает список отзывов для конкретного заголовка."""
 
-        title = get_object_or_404(Title, id=self.kwargs.get("title_id"))
+        title = self.get_title()
         return title.reviews.all()
 
     def perform_create(self, serializer):
         """Создает новый отзыв или обновляет существующий."""
 
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        title = self.get_title()
         author = self.request.user
-        existing_review = Review.objects.filter(
-            title=title, author=author
-        ).first()
-        if existing_review:
-            serializer.update(existing_review, serializer.validated_data)
-        else:
-            serializer.save(author=author, title=title)
+        serializer.save(author=author, title=title)

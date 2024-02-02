@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from api_yamdb.const import LEN_FOR_CONF_CODE, LEN_FOR_ROLE
+
 ROLE = (
     ('admin', 'администратор'),
     ('moderator', 'модератор'),
@@ -21,13 +23,13 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=15,
+        max_length=LEN_FOR_ROLE,
         choices=ROLE,
         default='user',
     )
     user_confirmation_code = models.CharField(
         'Код подтверждения',
-        max_length=5,
+        max_length=LEN_FOR_CONF_CODE,
         blank=True,
     )
 
